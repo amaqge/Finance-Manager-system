@@ -39,14 +39,14 @@ public:
     }
 // the constructor of the class
     void add_info(int data, string con, int c){
-        file.open("finance.txt", ios::in);
+        file.open("finance.txt", ios::app);
         file<<"Data; "<<data<<"| Consumption; "<<con<<"| Cost; "<<c<<endl;        
         file.close();
     }
 // the function to display the data from the file
     void display(){
         string line;
-            file.open("finance.txt", ios::app);
+            file.open("finance.txt", ios::in);
             while(getline(file, line)){
                 cout<<line<<endl;     
             } 
