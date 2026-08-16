@@ -25,7 +25,7 @@ public:
         return income;
     }
     void take_cost(int cost){
-        this->cost = cost;
+       income -= cost;
     }
 // the constructor to write the data to the file
     void add(){
@@ -39,7 +39,7 @@ public:
     }
 // the constructor of the class
     void add_info(int data, string con, int c){
-        file.open("finance.txt", ios::app);
+        file.open("finance.txt", ios::in);
         file<<"Data; "<<data<<"| Consumption; "<<con<<"| Cost; "<<c<<endl;        
         file.close();
     }
@@ -94,29 +94,71 @@ public:
     
 };
 
+
+
  
 
 
 
 
 int finance(){
-    Stats s;
-    File f1;
-    int income;
-    cout<<"pls enter your income: ";
-    cin>>income;
-    f1.ho(income);
-    f1.add();
-    Add_info a;
-    string consumption;
-    int data, cost;
-    cin>>data>>cost>>consumption;
-    a.add_info(data, cost, consumption, s, f1);
-    data = 0; cost = 0; consumption = "";
-    f1.display();
-    s.display_spending();
-    s.calculate_balance(income);
-    
-    
-
+    int icome;
+        cout<<"Enter your income: ";
+        cin>>icome;
+        File f1;
+        Stats s;
+        Add_info a;
+        f1.ho(icome);
+    while(true){
+        int choice;
+        cout<<"======================================================"<<endl;
+        cout<<"||         Welcome to Finance Manager System.        ||"<<endl;
+        cout<<"||        Please select an option:                   ||"<<endl;
+        cout<<"|| 1. Add spending                                   ||"<<endl;
+        cout<<"|| 2. Display finance information                    ||"<<endl;
+        cout<<"|| 3. Display total spending                         ||"<<endl;
+        cout<<"|| 4. Display balance                                ||"<<endl;
+        cout<<"|| 5. Exit                                           ||"<<endl;
+        cout<<"======================================================"<<endl;
+        cout<<"Enter your choice: ";
+        cin>>choice;
+        
+        switch(choice){
+           case 1:{
+            int data,cost;
+            string consumption;
+            cout<<"Enter the date: ";
+            cin>>data;
+            cout<<"Enter the consumption: ";
+            cin>>consumption;
+            cout<<"Enter the cost: ";
+            cin>>cost;
+            a.add_info(data, cost, consumption, s, f1);
+            break;
+           }
+           case 2:{
+            f1.display();
+            break;
+           }
+           case 3:{
+            s.display_spending();
+            break;
+           }
+           case 4:{
+            s.calculate_balance(f1.get_income());
+            break;
+           }
+           case 5:{
+            cout<<"Exiting the program..."<<endl;
+            return 0;
+           }
+              default:{
+                cout<<"Invalid choice. Please try again."<<endl;
+                break;
+              }
+        }
+    }
+}
+int main(){
+    return finance();
 }
