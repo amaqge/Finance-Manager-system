@@ -9,7 +9,7 @@ using namespace std;
 
 class File{
 protected:
-    int data;
+    string data;
     string consumption;
     fstream file;
     int cost;
@@ -24,9 +24,6 @@ public:
     int get_income(){
         return income;
     }
-    void take_cost(int cost){
-       income -= cost;
-    }
 // the constructor to write the data to the file
     void add(){
         file.open("finance.txt", ios::app);
@@ -38,7 +35,7 @@ public:
         file.close();
     }
 // the constructor of the class
-    void add_info(int data, string con, int c, string category){
+    void add_info(string data, string con, int c, string category){
         file.open("finance.txt", ios::app);
         file<<"Data; "<<data<<"| Category; "<<category<<"| Consumption; "<<con<<"| Cost; "<<c<<endl;        
         file.close();
@@ -66,8 +63,35 @@ protected:
     int other = 0;
 public:
     Category(){}
+    void load_from_file(){
+        file.open("finance.txt", ios::in);
+        string line;
+        int cost  = 0;
+        while(getline(file, line)){
+            size_t part  = line.find("| Category; ");
+            if(part != string ::npos){
+            size_t category_end = line.find("| Consumption; ");
+            category = line.substr(
+                part + 12,
+                category_end - (part + 12)
+            );
+            }
+            
+            size_t part2 = line.find("| Cost; ");
+            if(part2 != string::npos){
+                string cost_string = line.substr(part2 + 8);
+                cost = stoi(cost_string);
+            }
+            if(part != string::npos && part2 != string::npos){
+                type_category(category, cost);
+            }
+        }
+        
+        file.close();
+    }
     // the function to add the cost to the category
     void type_category(string category, int cost){
+        cout<<category<<" "<<cost<<endl;
         this->category = category;
         if(category == "food" || category == "Food"){
             food += cost;
@@ -83,7 +107,8 @@ public:
         }
         else{
             other += cost;
-        } 
+        }
+        
     }
     void display_category(){
         cout<<"Food: "<<food<<endl;
@@ -92,6 +117,8 @@ public:
         cout<<"Health: "<<health<<endl;
         cout<<"Other: "<<other<<endl;
     }
+
+    
 };
 
 class Stats:public File{
@@ -100,8 +127,8 @@ protected:
 public:
     // the function to calculate the total spending
     void total(int cost){
-        sum += cost;
-    }
+    sum += cost;
+}
     // the function to display the total spending
     void display_spending(){
         cout<<"Total spending: "<<sum<<endl;
@@ -110,6 +137,19 @@ public:
     void calculate_balance(int income){
         int balance=income-sum;
         cout<<"Balance: "<<balance<<endl;
+    }
+    void load_from_file(){
+        file.open("finance.txt", ios::in);
+        string line;
+        while(getline(file, line)){
+            size_t part2 = line.find("| Cost; ");
+            if(part2 != string::npos){
+                string cost_string = line.substr(part2 + 8);
+                cost = stoi(cost_string);
+                sum += cost;
+            }
+        }
+        file.close();
     }
     
 };
@@ -121,7 +161,7 @@ protected:
     int cost;
     string category;
 public:
-    void add_info(int data, int cost, string consumption, Stats& s, File& f1, Category& c, string category){
+    void add_info(string data, int cost, string consumption, Stats& s, File& f1, Category& c, string category){
         // if you spent more than your income it will display an error message
         if(f1.get_income() - cost < 0){
             cout<<"ERROR : you cannot spent more than your income"<<endl;
@@ -130,7 +170,6 @@ public:
         else{
         f1.add_info(data, consumption, cost, category);
         s.total(cost);
-        f1.take_cost(cost);
         c.type_category(category, cost);
         }
     }
@@ -146,6 +185,9 @@ int finance(){
         Add_info a;
         Category c;
         f1.ho(icome);
+        s.load_from_file();
+        c.load_from_file();
+        f1.add();
     while(true){
         int choice;
         cout<<"======================================================"<<endl;
@@ -163,14 +205,17 @@ int finance(){
         
         switch(choice){
            case 1:{
-            int data,cost;
-            string consumption, category;
+            string consumption, category, data;
+            int cost;
             cout<<"Enter the date: ";
             cin>>data;
+            cout<<endl;
             cout<<"Enter the category: ";
             cin>>category;
+            cout<<endl;
             cout<<"Enter the consumption: ";
             cin>>consumption;
+            cout<<endl;
             cout<<"Enter the cost: ";
             cin>>cost;
             a.add_info(data, cost, consumption, s, f1, c, category);
