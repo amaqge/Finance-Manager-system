@@ -18,8 +18,28 @@ public:
     
 // constructor of the income to get it anywhere in the program
     File(){}
+    // reading file to save information
     void ho(int income){
-        this->income = income;
+        file.open("finance.txt", ios::in);
+        string line;
+        bool found = false;
+        while(getline(file, line)){
+            size_t inc= line.find("Income; ");
+            if(inc !=  string::npos){
+              string income_string = line.substr(8);
+              this->income = stoi(income_string);
+                found = true;
+                break;
+            }
+        }
+        file.close();
+        if(!found){
+            cout<<"pls enter Income:"<<endl;
+            cin>>income;
+            this->income = income;
+
+            add();
+        }
     }
     int get_income(){
         return income;
@@ -48,6 +68,14 @@ public:
                 cout<<line<<endl;     
             } 
             file.close();  
+    }
+    void edit_info(){
+        string line;
+        file.open("finance.txt", ios::in);
+        while(getline(file, line)){
+            cout<<line<<endl;
+        }
+        file.close();
     }
 };
 
@@ -91,7 +119,6 @@ public:
     }
     // the function to add the cost to the category
     void type_category(string category, int cost){
-        cout<<category<<" "<<cost<<endl;
         this->category = category;
         if(category == "food" || category == "Food"){
             food += cost;
@@ -177,17 +204,14 @@ public:
 };
 
 int finance(){
-    int icome;
-        cout<<"Enter your income: ";
-        cin>>icome;
+    int income = 0;
         File f1;
         Stats s;
         Add_info a;
         Category c;
-        f1.ho(icome);
+        f1.ho(income);
         s.load_from_file();
         c.load_from_file();
-        f1.add();
     while(true){
         int choice;
         cout<<"======================================================"<<endl;
@@ -198,7 +222,9 @@ int finance(){
         cout<<"|| 3. Display total spending                         ||"<<endl;
         cout<<"|| 4. Display balance                                ||"<<endl;
         cout<<"|| 5. Display all information from the file          ||"<<endl;
-        cout<<"|| 6. Exit                                           ||"<<endl;
+        cout<<"|| 6. Edit spending                                  ||"<<endl;
+        cout<<"|| 7. Delete spending                                ||"<<endl;
+        cout<<"|| 8. Exit                                           ||"<<endl;
         cout<<"======================================================"<<endl;
         cout<<"Enter your choice: ";
         cin>>choice;
@@ -238,6 +264,14 @@ int finance(){
             break;
            }
            case 6:{
+                f1.edit_info();
+                break; // only for check 
+                // soon add more
+           }
+           case 7:{
+                // soon
+           }
+           case 8:{
             cout<<"Exiting the program..."<<endl;
             return 0;
            }
