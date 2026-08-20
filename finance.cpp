@@ -6,20 +6,27 @@ using namespace std;
 
 
 
+// Dream programer;
+// Only I and god know how this code work , 
+//after few updates only god will know how it work
+// You can change all you want , but pls make explain 
+class Stats;
+class Category;
+
 
 class File{
 protected:
     string data;
     string consumption;
     fstream file;
-    int cost;
-    int income;
+    double cost;
+    double income;
 public:
     
 // constructor of the income to get it anywhere in the program
     File(){}
     // reading file to save information
-    void ho(int income){
+    void ho(double income){
         file.open("finance.txt", ios::in);
         string line;
         bool found = false;
@@ -41,7 +48,7 @@ public:
             add();
         }
     }
-    int get_income(){
+    double get_income(){
         return income;
     }
 // the constructor to write the data to the file
@@ -55,7 +62,7 @@ public:
         file.close();
     }
 // the constructor of the class
-    void add_info(string data, string con, int c, string category){
+    void add_info(string data, string con, double c, string category){
         file.open("finance.txt", ios::app);
         file<<"Data; "<<data<<"| Category; "<<category<<"| Consumption; "<<con<<"| Cost; "<<c<<endl;        
         file.close();
@@ -69,14 +76,80 @@ public:
             } 
             file.close();  
     }
-    void edit_info(){
+    void edit_info(Stats& s, Category& c){
+        vector<string> lines;
         string line;
         file.open("finance.txt", ios::in);
         while(getline(file, line)){
-            cout<<line<<endl;
+            lines.push_back(line);
         }
         file.close();
+        int number = 1;
+
+        for(int i = 0; i < lines.size(); i++){
+            if(lines[i].find("Data") != string::npos){
+                cout<<number<<". "<<lines[i]<<endl;
+                number++;
+            }
+        }
+        int choise;
+        cout<<"Enter spending number to edit: ";
+        cin>>choise;
+        int spending_number = 1;
+        int line_index = -1;
+        for(int i = 0; i < lines.size(); i++){
+            if(lines[i].find("Data; ") != string::npos){
+                if(spending_number == choise){
+                    line_index = i;
+                    break;
+                }
+                spending_number++;
+            }
+        }
+        if(line_index == -1){
+            cout<<"Invalid spending number"<<endl;
+            return;
+        }
+        cout<<"Selected spending: "<<endl;
+        cout<<lines[line_index]<<endl;
+
+        size_t old_category_statr = lines[line_index].find("| Category; ");
+        size_t old_category_end = lines[line_index].find("| Consumption; ");
+
+        string old_category = lines[line_index].substr(
+            old_category_statr + 12,
+            old_category_end - (old_category_statr + 12)
+        );
+        size_t old_cost_start = lines[line_index].find("| Cost; ");
+            double old_cost = stod(lines[line_index].substr(old_cost_start + 8));
+        string new_data, new_category, new_consumption;
+        double new_cost;
+        cout<<"Enter new data: ";
+        cin>>new_data;
+        cout<<endl;
+        cout<<"Enter new category";
+        cin>>new_category;
+        cout<<endl;
+        cout<<"Enetr new consumption";
+        cin>>new_consumption;
+        cout<<endl;
+        cout<<"Enter new cost";
+        cin>>new_cost;
+        cout<<endl;
+        s.remove_total(old_cost);
+        s.add_total(new_cost);
+
+        c.remove_category(old_category, old_cost);
+        c.add_category(new_category, new_cost);
+        lines[line_index] = to_string(choise) + ". Data; " + new_data + "| Category; " + new_category + "| Consumption; " + new_consumption + "| Cost; " + to_string(new_cost);
+        file.open("finance.txt", ios::out | ios::trunc);
+            for(string line : lines){
+                file<<line<<endl;
+            }
+            file.close();
     }
+    
+
 };
 
 
@@ -84,17 +157,17 @@ class Category:public File{
 protected:
 // type of category and the cost of each category
     string category;
-    int food = 0;
-    int transport = 0;
-    int entertainment = 0;
-    int health = 0;
-    int other = 0;
+    double food = 0;
+    double transport = 0;
+    double entertainment = 0;
+    double health = 0;
+    double other = 0;
 public:
     Category(){}
     void load_from_file(){
         file.open("finance.txt", ios::in);
         string line;
-        int cost  = 0;
+        double cost  = 0;
         while(getline(file, line)){
             size_t part  = line.find("| Category; ");
             if(part != string ::npos){
@@ -108,7 +181,7 @@ public:
             size_t part2 = line.find("| Cost; ");
             if(part2 != string::npos){
                 string cost_string = line.substr(part2 + 8);
-                cost = stoi(cost_string);
+                cost = stod(cost_string);
             }
             if(part != string::npos && part2 != string::npos){
                 type_category(category, cost);
@@ -118,7 +191,7 @@ public:
         file.close();
     }
     // the function to add the cost to the category
-    void type_category(string category, int cost){
+    void type_category(string category, double cost){
         this->category = category;
         if(category == "food" || category == "Food"){
             food += cost;
@@ -137,6 +210,28 @@ public:
         }
         
     }
+    void remove_category(string category, double cost){
+        this->category = category;
+        if(category == "food" || category == "Food"){
+            food -= cost;
+        }
+        else if(category == "transport" || category == "Transport"){
+            transport -= cost;
+        }
+        else if(category == "entertainment" || category == "Entertainment"){
+            entertainment -= cost;
+        }
+        else if(category == "health" || category == "Health"){
+            health -= cost;
+        }
+        else{
+            other -= cost;
+        }
+
+    }
+    void add_category(string category, double cost){
+        type_category(category, cost);
+    }
     void display_category(){
         cout<<"Food: "<<food<<endl;
         cout<<"Transport: "<<transport<<endl;
@@ -150,10 +245,10 @@ public:
 
 class Stats:public File{
 protected:
-    int sum = 0;
+    double sum = 0;
 public:
     // the function to calculate the total spending
-    void total(int cost){
+    void total(double cost){
     sum += cost;
 }
     // the function to display the total spending
@@ -161,8 +256,8 @@ public:
         cout<<"Total spending: "<<sum<<endl;
     }
     // the function to calculate the balance
-    void calculate_balance(int income){
-        int balance=income-sum;
+    void calculate_balance(double income){
+        double balance=income-sum;
         cout<<"Balance: "<<balance<<endl;
     }
     void load_from_file(){
@@ -172,11 +267,17 @@ public:
             size_t part2 = line.find("| Cost; ");
             if(part2 != string::npos){
                 string cost_string = line.substr(part2 + 8);
-                cost = stoi(cost_string);
+                cost = stod(cost_string);
                 sum += cost;
             }
         }
         file.close();
+    }
+    void remove_total(double cost){
+        sum -= cost;
+    }
+    void add_total(double cost){
+        sum +=cost;
     }
     
 };
@@ -185,10 +286,10 @@ class Add_info:public File{
 protected:
     int data;
     string consumption;
-    int cost;
+    double cost;
     string category;
 public:
-    void add_info(string data, int cost, string consumption, Stats& s, File& f1, Category& c, string category){
+    void add_info(string data, double cost, string consumption, Stats& s, File& f1, Category& c, string category){
         // if you spent more than your income it will display an error message
         if(f1.get_income() - cost < 0){
             cout<<"ERROR : you cannot spent more than your income"<<endl;
@@ -232,7 +333,7 @@ int finance(){
         switch(choice){
            case 1:{
             string consumption, category, data;
-            int cost;
+            double cost;
             cout<<"Enter the date: ";
             cin>>data;
             cout<<endl;
@@ -264,9 +365,8 @@ int finance(){
             break;
            }
            case 6:{
-                f1.edit_info();
-                break; // only for check 
-                // soon add more
+                f1.edit_info(s, c);
+                break;
            }
            case 7:{
                 // soon
