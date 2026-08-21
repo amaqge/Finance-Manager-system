@@ -2,6 +2,7 @@
 #include<string>
 #include<fstream>
 #include<vector>
+#include<sstream>
 using namespace std;
 
 
@@ -76,80 +77,8 @@ public:
             } 
             file.close();  
     }
-    void edit_info(Stats& s, Category& c){
-        vector<string> lines;
-        string line;
-        file.open("finance.txt", ios::in);
-        while(getline(file, line)){
-            lines.push_back(line);
-        }
-        file.close();
-        int number = 1;
-
-        for(int i = 0; i < lines.size(); i++){
-            if(lines[i].find("Data") != string::npos){
-                cout<<number<<". "<<lines[i]<<endl;
-                number++;
-            }
-        }
-        int choise;
-        cout<<"Enter spending number to edit: ";
-        cin>>choise;
-        int spending_number = 1;
-        int line_index = -1;
-        for(int i = 0; i < lines.size(); i++){
-            if(lines[i].find("Data; ") != string::npos){
-                if(spending_number == choise){
-                    line_index = i;
-                    break;
-                }
-                spending_number++;
-            }
-        }
-        if(line_index == -1){
-            cout<<"Invalid spending number"<<endl;
-            return;
-        }
-        cout<<"Selected spending: "<<endl;
-        cout<<lines[line_index]<<endl;
-
-        size_t old_category_statr = lines[line_index].find("| Category; ");
-        size_t old_category_end = lines[line_index].find("| Consumption; ");
-
-        string old_category = lines[line_index].substr(
-            old_category_statr + 12,
-            old_category_end - (old_category_statr + 12)
-        );
-        size_t old_cost_start = lines[line_index].find("| Cost; ");
-            double old_cost = stod(lines[line_index].substr(old_cost_start + 8));
-        string new_data, new_category, new_consumption;
-        double new_cost;
-        cout<<"Enter new data: ";
-        cin>>new_data;
-        cout<<endl;
-        cout<<"Enter new category";
-        cin>>new_category;
-        cout<<endl;
-        cout<<"Enetr new consumption";
-        cin>>new_consumption;
-        cout<<endl;
-        cout<<"Enter new cost";
-        cin>>new_cost;
-        cout<<endl;
-        s.remove_total(old_cost);
-        s.add_total(new_cost);
-
-        c.remove_category(old_category, old_cost);
-        c.add_category(new_category, new_cost);
-        lines[line_index] = to_string(choise) + ". Data; " + new_data + "| Category; " + new_category + "| Consumption; " + new_consumption + "| Cost; " + to_string(new_cost);
-        file.open("finance.txt", ios::out | ios::trunc);
-            for(string line : lines){
-                file<<line<<endl;
-            }
-            file.close();
-    }
-    
-
+    void edit_info(Stats& s, Category& c);
+    void delete_spending(Stats& s, Category& c);
 };
 
 
@@ -281,7 +210,139 @@ public:
     }
     
 };
+void File::edit_info(Stats& s, Category& c){
+    vector<string> lines;
+        string line;
+        file.open("finance.txt", ios::in);
+        while(getline(file, line)){
+            lines.push_back(line);
+        }
+        file.close();
+        int number = 1;
 
+        for(int i = 0; i < lines.size(); i++){
+            if(lines[i].find("Data") != string::npos){
+                cout<<number<<". "<<lines[i]<<endl;
+                number++;
+            }
+        }
+        int choise;
+        cout<<"Enter spending number to edit: ";
+        cin>>choise;
+        int spending_number = 1;
+        int line_index = -1;
+        for(int i = 0; i < lines.size(); i++){
+            if(lines[i].find("Data; ") != string::npos){
+                if(spending_number == choise){
+                    line_index = i;
+                    break;
+                }
+                spending_number++;
+            }
+        }
+        if(line_index == -1){
+            cout<<"Invalid spending number"<<endl;
+            return;
+        }
+        cout<<"Selected spending: "<<endl;
+        cout<<lines[line_index]<<endl;
+
+        size_t old_category_statr = lines[line_index].find("| Category; ");
+        size_t old_category_end = lines[line_index].find("| Consumption; ");
+
+        string old_category = lines[line_index].substr(
+            old_category_statr + 12,
+            old_category_end - (old_category_statr + 12)
+        );
+        size_t old_cost_start = lines[line_index].find("| Cost; ");
+            double old_cost = stod(lines[line_index].substr(old_cost_start + 8));
+        string new_data, new_category, new_consumption;
+        double new_cost;
+        cout<<"Enter new data: ";
+        cin>>new_data;
+        cout<<endl;
+        cout<<"Enter new category: ";
+        cin>>new_category;
+        cout<<endl;
+        cout<<"Enetr new consumption: ";
+        cin>>new_consumption;
+        cout<<endl;
+        cout<<"Enter new cost: ";
+        cin>>new_cost;
+        cout<<endl;
+        if(get_income() - new_cost < 0){
+            cout<<"ERROR : you cannot spent more than your income"<<endl;
+            return;
+        }
+        s.remove_total(old_cost);
+        s.add_total(new_cost);
+        c.remove_category(old_category, old_cost);
+        c.add_category(new_category, new_cost);
+        ostringstream cost_stream;
+        cost_stream << new_cost;
+        lines[line_index] = "Data; " + new_data + "| Category; " + new_category + "| Consumption; " + new_consumption + "| Cost; " + cost_stream.str();
+        file.open("finance.txt", ios::out | ios::trunc);
+            for(string line : lines){
+                file<<line<<endl;
+            }
+            file.close();
+}
+void File::delete_spending(Stats& s, Category& c){
+    vector<string> lines;
+        string line;
+        file.open("finance.txt", ios::in);
+        while(getline(file,line)){
+            lines.push_back(line);
+        }
+        file.close();
+
+        int number = 1;
+            for(int i = 0; i < lines.size(); i++){
+                if(lines[i].find("Data; ") != string ::npos){
+                    cout<<number<<". "<<lines[i]<<endl;
+                    number++;
+                }
+            }
+            int choise;
+            cout<<"Enter spending number to delete: ";
+            cin>>choise;
+
+        int spending_number = 1;
+        int line_index = -1;
+            for(int i = 0 ; i < lines.size(); i++){
+                if(lines[i].find("Data; ") != string ::npos){
+                    if(spending_number == choise){
+
+                    
+                    line_index = i;
+                    break;
+                    }
+                    spending_number++;
+                }
+                
+            }
+            if(line_index == -1){
+                cout<<"Error"<<endl;
+                return;
+            }
+        size_t old_category_statr = lines[line_index].find("| Category; ");
+        size_t old_category_end = lines[line_index].find("| Consumption; ");
+        string old_category = lines[line_index].substr(
+            old_category_statr + 12,
+            old_category_end - (old_category_statr + 12)
+        );
+        size_t old_cost_start = lines[line_index].find("| Cost; ");
+        double old_cost = stod(lines[line_index].substr(old_cost_start + 8));
+        s.remove_total(old_cost);
+        c.remove_category(old_category, old_cost);
+        lines.erase(lines.begin() + line_index);
+
+        file.open("finance.txt", ios::out | ios::trunc);
+        for(string line : lines)
+            file<<line<<endl;
+        file.close();
+        cout<<"Spending deleted successfuly"<<endl;
+}
 class Add_info:public File{
 protected:
     int data;
@@ -369,7 +430,8 @@ int finance(){
                 break;
            }
            case 7:{
-                // soon
+                f1.delete_spending(s, c);
+                break;
            }
            case 8:{
             cout<<"Exiting the program..."<<endl;
